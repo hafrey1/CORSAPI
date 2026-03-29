@@ -194,7 +194,119 @@ async function handleRequest(request, ctx) {
   }
 
   // ---------------- 首页 ----------------
-  return new Response(`API Proxy OK`, {
-    headers: { 'Content-Type': 'text/plain' }
+// ---------- 首页文档处理 ----------
+async function handleHomePage(currentOrigin, defaultPrefix) {
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API 中转代理服务</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; line-height: 1.6; }
+    h1 { color: #333; }
+    h2 { color: #555; margin-top: 30px; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+    pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .example { background: #e8f5e9; padding: 15px; border-left: 4px solid #4caf50; margin: 20px 0; }
+    .section { background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    table td { padding: 8px; border: 1px solid #ddd; }
+    table td:first-child { background: #f5f5f5; font-weight: bold; width: 30%; }
+  </style>
+</head>
+<body>
+  <h1>🔄 API 中转代理服务</h1>
+  <p>通用 API 中转代理，用于访问被墙或限制的接口。</p>
+  
+  <h2>使用方法</h2>
+  <p>中转任意 API：在请求 URL 后添加 <code>?url=目标地址</code> 参数</p>
+  <pre>${defaultPrefix}<示例API地址></pre>
+  
+  <h2>配置订阅参数说明</h2>
+  <div class="section">
+    <table>
+      <tr>
+        <td>format</td>
+        <td><code>0</code> 或 <code>raw</code> = 原始 JSON<br>
+            <code>1</code> 或 <code>proxy</code> = 添加代理前缀<br>
+            <code>2</code> 或 <code>base58</code> = 原始 Base58 编码<br>
+            <code>3</code> 或 <code>proxy-base58</code> = 代理 Base58 编码</td>
+      </tr>
+      <tr>
+        <td>source</td>
+        <td><code>jin18</code> = 精简版<br>
+            <code>jingjian</code> = 精简版+成人<br>
+            <code>full</code> = 完整版（默认）</td>
+      </tr>
+      <tr>
+        <td>prefix</td>
+        <td>自定义代理前缀（仅在 format=1 或 3 时生效）</td>
+      </tr>
+    </table>
+  </div>
+  
+  <h2>配置订阅链接示例</h2>
+    
+  <div class="section">
+    <h3>📦 精简版（jin18）</h3>
+    <p>原始 JSON：<br><code class="copyable">${currentOrigin}?format=0&source=jin18</code> <button class="copy-btn">复制</button></p>
+    <p>中转代理 JSON：<br><code class="copyable">${currentOrigin}?format=1&source=jin18</code> <button class="copy-btn">复制</button></p>
+    <p>原始 Base58：<br><code class="copyable">${currentOrigin}?format=2&source=jin18</code> <button class="copy-btn">复制</button></p>
+    <p>中转 Base58：<br><code class="copyable">${currentOrigin}?format=3&source=jin18</code> <button class="copy-btn">复制</button></p>
+  </div>
+  
+  <div class="section">
+    <h3>📦 精简版+成人（jingjian）</h3>
+    <p>原始 JSON：<br><code class="copyable">${currentOrigin}?format=0&source=jingjian</code> <button class="copy-btn">复制</button></p>
+    <p>中转代理 JSON：<br><code class="copyable">${currentOrigin}?format=1&source=jingjian</code> <button class="copy-btn">复制</button></p>
+    <p>原始 Base58：<br><code class="copyable">${currentOrigin}?format=2&source=jingjian</code> <button class="copy-btn">复制</button></p>
+    <p>中转 Base58：<br><code class="copyable">${currentOrigin}?format=3&source=jingjian</code> <button class="copy-btn">复制</button></p>
+  </div>
+  
+  <div class="section">
+    <h3>📦 完整版（full，默认）</h3>
+    <p>原始 JSON：<br><code class="copyable">${currentOrigin}?format=0&source=full</code> <button class="copy-btn">复制</button></p>
+    <p>中转代理 JSON：<br><code class="copyable">${currentOrigin}?format=1&source=full</code> <button class="copy-btn">复制</button></p>
+    <p>原始 Base58：<br><code class="copyable">${currentOrigin}?format=2&source=full</code> <button class="copy-btn">复制</button></p>
+    <p>中转 Base58：<br><code class="copyable">${currentOrigin}?format=3&source=full</code> <button class="copy-btn">复制</button></p>
+  </div>
+  
+  <h2>支持的功能</h2>
+  <ul>
+    <li>✅ 支持 GET、POST、PUT、DELETE 等所有 HTTP 方法</li>
+    <li>✅ 自动转发请求头和请求体</li>
+    <li>✅ 保留原始响应头（除敏感信息）</li>
+    <li>✅ 完整的 CORS 支持</li>
+    <li>✅ 超时保护（9 秒）</li>
+    <li>✅ 支持多种配置源切换</li>
+    <li>✅ 支持 Base58 编码输出</li>
+  </ul>
+  
+  <script>
+    document.querySelectorAll('.copy-btn').forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const text = document.querySelectorAll('.copyable')[idx].innerText;
+        navigator.clipboard.writeText(text).then(() => {
+          btn.innerText = '已复制！';
+          setTimeout(() => (btn.innerText = '复制'), 1500);
+        });
+      });
+    });
+  </script>
+</body>
+</html>`
+
+  return new Response(html, { 
+    status: 200, 
+    headers: { 'Content-Type': 'text/html; charset=utf-8', ...CORS_HEADERS } 
+  })
+}
+
+// ---------- 统一错误响应处理 ----------
+function errorResponse(error, data = {}, status = 400) {
+  return new Response(JSON.stringify({ error, ...data }), {
+    status,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS_HEADERS }
   })
 }
