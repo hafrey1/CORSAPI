@@ -1,4 +1,3 @@
-```js
 // 统一入口：兼容 Cloudflare Workers 和 Pages Functions
 export default {
   async fetch(request, env, ctx) {
