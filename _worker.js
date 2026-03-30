@@ -156,35 +156,34 @@ async function getCachedJSON(url) {
   }
 
   // ---------- 2. 再读取 KV ----------
-  const kvAvailable =
-    typeof KV !== 'undefined' &&
-    KV &&
-    typeof KV.get === 'function'
+const kvAvailable =
+  typeof globalThis.KV !== 'undefined' &&
+  globalThis.KV &&
+  typeof globalThis.KV.get === 'function'
 
-  if (kvAvailable) {
-    try {
-      const cached = await KV.get(cacheKey)
+if (kvAvailable) {
+  try {
+    const cached = await globalThis.KV.get(cacheKey)
 
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached)
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached)
 
-          // 写入内存缓存
-          MEMORY_CACHE.set(cacheKey, {
-            data: parsed,
-            expireAt: now + MEMORY_CACHE_TTL
-          })
+        MEMORY_CACHE.set(cacheKey, {
+          data: parsed,
+          expireAt: now + MEMORY_CACHE_TTL
+        })
 
-          return parsed
-        } catch (parseError) {
-          console.error('[KV PARSE ERROR]', parseError)
-          await KV.delete(cacheKey)
-        }
+        return parsed
+      } catch (parseError) {
+        console.error('[KV PARSE ERROR]', parseError)
+        await globalThis.KV.delete(cacheKey)
       }
-    } catch (kvReadError) {
-      console.error('[KV READ ERROR]', kvReadError)
     }
+  } catch (kvReadError) {
+    console.error('[KV READ ERROR]', kvReadError)
   }
+}
 
   // ---------- 3. 都没有命中，再请求源站 ----------
   const res = await fetch(url, {
@@ -210,7 +209,7 @@ async function getCachedJSON(url) {
   // ---------- 5. 写入 KV ----------
   if (kvAvailable) {
     try {
-      await KV.put(cacheKey, JSON.stringify(data), {
+      await globalThis.KV.put(cacheKey, JSON.stringify(data), {
         expirationTtl: KV_CACHE_TTL
       })
     } catch (kvWriteError) {
@@ -524,10 +523,3 @@ async function handleHomePage(currentOrigin, defaultPrefix) {
   })
 }
 
-// ---------- 统一错误响应处理 ----------
-function errorResponse(error, data = {}, status = 400) {
-  return new Response(JSON.stringify({ error, ...data }), {
-    status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8', ...CORS_HEADERS }
-  })
-}
