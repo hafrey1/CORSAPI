@@ -1,383 +1,156 @@
-# API 中转代理服务
+🚀 CORS API Proxy（Cloudflare Worker）
 
-一个基于 Cloudflare Workers / Pages Functions 的通用 API 中转代理服务。
+一个基于 Cloudflare Workers 的高性能 API 中转代理服务，支持：
 
-支持：
+🌍 任意 API 跨域访问（CORS）
+🔄 JSON 配置动态处理
+⚡ 双层缓存（Memory + KV）
+🔐 SSRF 安全防护
+📦 Base58 编码输出
+🧩 多数据源切换
+📦 项目地址
 
-* 任意 API 请求中转
-* JSON 配置订阅输出
-* Base58 编码输出
-* Cloudflare KV + 内存双层缓存
-* 自动 CORS
-* 自定义代理前缀
-* 多配置源切换
-* Workers 与 Pages Functions 通用
+👉 https://github.com/hafrey1/CORSAPI
 
----
+✨ 功能特性
+✅ 支持 GET / POST / PUT / DELETE / PATCH
+✅ 自动透传请求头 & 请求体
+✅ 自动处理 CORS（全开放）
+✅ 支持大部分 API 代理
+✅ 内置超时保护（默认 8 秒）
+✅ 内存缓存 + KV 持久缓存
+✅ JSON 数据动态改写（API 前缀替换）
+✅ Base58 编码输出（适用于订阅场景）
+🚀 快速开始
+1️⃣ 安装依赖
+npm install -g wrangler
 
-# 功能特性
+登录 Cloudflare：
 
-* 支持 GET、POST、PUT、DELETE、OPTIONS 等 HTTP 方法
-* 自动透传请求头与请求体
-* 自动过滤敏感响应头
-* 防止自身递归调用
-* 请求超时保护（9 秒）
-* Worker 内存缓存
-* Cloudflare KV 持久缓存
-* 支持 JSON / Base58 两种输出格式
-* 支持代理前缀自动替换
-* 支持自定义配置源
+wrangler login
+2️⃣ 初始化项目
+wrangler init cors-api
+cd cors-api
 
----
+把你的代码放进：
 
-# 项目结构
-
-```tree
-.
-├── worker.js
-├── wrangler.toml
-├── package.json
-└── README.md
-```
-
----
-
-# 部署方式
-
-## 方案一：Cloudflare Workers
-
-### 1. 创建项目
-
-```bash
-mkdir cf-proxy-service
-cd cf-proxy-service
-npm init -y
-```
-
-### 2. 安装 Wrangler
-
-```bash
-npm install -D wrangler
-```
-
-### 3. 创建 worker.js
-
-将你的代码保存为：
-
-```bash
 /worker.js
-```
-
-### 4. 创建 wrangler.toml
-
-```toml
-name = "cf-proxy-service"
+3️⃣ 配置 wrangler.toml
+name = "cors-api"
 main = "worker.js"
-compatibility_date = "2026-03-30"
-workers_dev = true
+compatibility_date = "2024-01-01"
 
+# KV（可选）
 [[kv_namespaces]]
 binding = "KV"
-id = "你的KV命名空间ID"
-preview_id = "你的KV预览命名空间ID"
-```
+id = "你的KV_ID"
+4️⃣ 设置环境变量（可选）
+wrangler secret put ALLOWED_HOSTS
+wrangler secret put PROXY_TIMEOUT
+wrangler secret put MAX_BODY_SIZE
+wrangler secret put MEMORY_CACHE_TTL
+wrangler secret put KV_CACHE_TTL
+5️⃣ 部署
+wrangler deploy
 
-### 5. 登录 Cloudflare
+部署完成后得到：
 
-```bash
-npx wrangler login
-```
-
-### 6. 创建 KV 命名空间
-
-```bash
-npx wrangler kv namespace create KV
-npx wrangler kv namespace create KV --preview
-```
-
-创建后，把返回的 id 填入 wrangler.toml。
-
-### 7. 本地开发
-
-```bash
-npx wrangler dev
-```
-
-默认会启动在：
-
-```text
-http://127.0.0.1:8787
-```
-
-### 8. 发布上线
-
-```bash
-npx wrangler deploy
-```
-
----
-
-## 方案二：Cloudflare Pages Functions
-
-### 1. 项目结构
-
-```tree
-.
-├── functions
-│   └── [[path]].js
-├── public
-│   └── index.html
-├── wrangler.toml
-└── package.json
-```
-
-### 2. 文件路径
-
-把你的代码保存到：
-
-```bash
-/functions/[[path]].js
-```
-
-### 3. wrangler.toml
-
-```toml
-name = "cf-pages-proxy"
-compatibility_date = "2026-03-30"
-pages_build_output_dir = "public"
-
-[[kv_namespaces]]
-binding = "KV"
-id = "你的KV命名空间ID"
-preview_id = "你的KV预览命名空间ID"
-```
-
-### 4. 本地开发
-
-```bash
-npx wrangler pages dev public
-```
-
-### 5. 发布
-
-推送到 GitHub 后，在 Cloudflare Pages 中连接仓库即可自动部署。
-
----
-
-# package.json
-
-```json
-{
-  "name": "cf-proxy-service",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
-  },
-  "devDependencies": {
-    "wrangler": "^4.8.0"
-  }
-}
-```
-
----
-
-# 环境变量
-
-当前项目不依赖额外环境变量。
-
-仅需要绑定：
-
-```text
-KV
-```
-
----
-
-# API 使用说明
-
-## 1. 健康检查
-
-```http
-GET /health
-```
-
+https://your-domain.workers.dev
+🧠 使用方式
+🔄 1. API 代理
+https://your-domain.workers.dev/?url=目标API地址
 示例：
-
-```bash
-curl https://your-domain.com/health
-```
+curl "https://your-domain.workers.dev/?url=https://api.github.com"
+📦 2. JSON 配置订阅
+参数说明：
+参数	说明
+format	输出格式
+source	数据源
+prefix	自定义代理前缀
+🎯 format 参数
+值	说明
+0 / raw	原始 JSON
+1 / proxy	添加代理
+2 / base58	Base58 编码
+3 / proxy-base58	代理 + Base58
+📁 source 参数
+值	说明
+jin18	精简版
+jingjian	精简+成人
+full	完整版（默认）
+🔗 示例
+原始 JSON
+https://your-domain.workers.dev/?format=0
+代理 JSON
+https://your-domain.workers.dev/?format=1
+Base58
+https://your-domain.workers.dev/?format=2
+代理 + Base58
+https://your-domain.workers.dev/?format=3
+⚙️ 环境变量说明
+变量	默认值	说明
+ALLOWED_HOSTS	空	允许访问的域名（正则）
+PROXY_TIMEOUT	8000	请求超时（ms）
+MAX_BODY_SIZE	10485760	最大请求体（10MB）
+MEMORY_CACHE_TTL	300000	内存缓存时间
+KV_CACHE_TTL	1800	KV缓存时间（秒）
+ENABLE_BASE58	true	是否启用 Base58
+🧩 架构设计
+用户请求
+   ↓
+Worker
+   ↓
+├── 内存缓存（优先）
+├── KV缓存（持久）
+└── 远程 API 请求
+        ↓
+   返回结果 + CORS
+🔐 安全设计
+🚫 防止 SSRF（限制协议 + 域名）
+🚫 禁止访问自身（防循环）
+🚫 限制请求体大小
+🚫 过滤敏感 Header
+⚡ 性能优化
+⚡ 内存缓存（毫秒级响应）
+⚡ KV 缓存（跨实例共享）
+⚡ Cloudflare 边缘缓存
+⚡ 懒清理缓存（避免 CPU 浪费）
+🧪 测试接口
+健康检查
+curl https://your-domain.workers.dev/health
 
 返回：
 
-```text
 OK
-```
+📌 常见问题
+❓ 为什么有些 API 请求失败？
 
----
+可能原因：
 
-## 2. 通用代理
+目标网站限制 IP（Cloudflare）
+目标 API 禁止代理访问
+HTTPS 证书问题
+❓ 如何限制代理域名？
 
-请求方式：
+设置：
 
-```http
-GET /?url=https://example.com/api/data
-```
+ALLOWED_HOSTS=^api\.github\.com$,^example\.com$
+❓ KV 不生效？
 
-示例：
+确认：
 
-```bash
-curl "https://your-domain.com/?url=https://jsonplaceholder.typicode.com/posts/1"
-```
+已绑定 KV namespace
+wrangler.toml 配置正确
+🛠 后续优化建议
+🔄 增加缓存命中率统计
+📊 接入日志分析（Logpush）
+🔐 加 API Key 限流
+🌍 多区域负载策略
+📦 支持 gzip / brotli
+📄 License
 
-POST 示例：
+MIT License
 
-```bash
-curl -X POST "https://your-domain.com/?url=https://httpbin.org/post" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"test"}'
-```
+❤️ 作者
 
----
-
-## 3. JSON 配置输出
-
-### format 参数
-
-| 参数值          | 说明          |
-| ------------ | ----------- |
-| 0            | 原始 JSON     |
-| raw          | 原始 JSON     |
-| 1            | 添加代理前缀      |
-| proxy        | 添加代理前缀      |
-| 2            | Base58 编码   |
-| base58       | Base58 编码   |
-| 3            | 代理 + Base58 |
-| proxy-base58 | 代理 + Base58 |
-
-### source 参数
-
-| 参数值      | 说明      |
-| -------- | ------- |
-| jin18    | 精简版     |
-| jingjian | 精简版+成人  |
-| full     | 完整版（默认） |
-
----
-
-# 配置示例
-
-## 原始 JSON
-
-```bash
-curl "https://your-domain.com/?format=0&source=full"
-```
-
-## 代理 JSON
-
-```bash
-curl "https://your-domain.com/?format=1&source=full"
-```
-
-## Base58
-
-```bash
-curl "https://your-domain.com/?format=2&source=full"
-```
-
-## 代理 + Base58
-
-```bash
-curl "https://your-domain.com/?format=3&source=full"
-```
-
-## 自定义前缀
-
-```bash
-curl "https://your-domain.com/?format=1&source=full&prefix=https://proxy.example.com/?url="
-```
-
----
-
-# 缓存策略
-
-项目采用双层缓存：
-
-## Worker 内存缓存
-
-* 缓存时间：5 分钟
-* 同一个 Worker 实例共享
-* 响应速度最快
-
-## Cloudflare KV 缓存
-
-* 缓存时间：30 分钟
-* 跨 Worker 实例共享
-* 减少 GitHub Raw 请求次数
-
-缓存读取顺序：
-
-```text
-内存缓存 -> KV 缓存 -> 源站请求
-```
-
----
-
-# 错误响应格式
-
-所有错误都会返回统一 JSON：
-
-```json
-{
-  "success": false,
-  "error": "错误信息",
-  "details": {},
-  "timestamp": "2026-03-30T12:00:00.000Z"
-}
-```
-
----
-
-# 安全限制
-
-项目内置以下保护：
-
-* 禁止代理请求自身域名，防止死循环
-* 禁止非 http / https URL
-* 自动移除敏感响应头
-* 自动超时终止请求
-* 不透传 Set-Cookie
-
----
-
-# 性能优化建议
-
-## 推荐优化
-
-1. 给 fetch 增加 cf cacheEverything 与 cacheTtl
-2. 增加 URL 白名单
-3. 增加请求频率限制
-4. 增加日志系统
-5. 增加监控告警
-6. 增加 gzip / brotli 压缩
-7. 增加多源容灾
-
----
-
-# 后续可扩展功能
-
-* IP 黑名单
-* Token 鉴权
-* 请求次数统计
-* 管理后台
-* 动态配置源
-* Web UI 面板
-* 限流系统
-* 数据分析
-
----
-
-# License
-
-MIT
+hafrey
