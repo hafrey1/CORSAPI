@@ -1,9 +1,12 @@
-name = "cf-proxy-service"
-main = "worker.js"
-compatibility_date = "2026-03-30"
-workers_dev = true
+name = "cors-proxy"
+main = "_worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+ALLOWED_HOSTS = ""  # 留空允许所有公网，或设置 "api\.example\.com,\.github\.com$"
+PROXY_TIMEOUT = "8000"
+MAX_BODY_SIZE = "10485760"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "你的KV命名空间ID"
-preview_id = "你的KV预览命名空间ID"
+id = "your-kv-id"
